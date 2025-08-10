@@ -15,7 +15,7 @@ from .prompts import DeveloperToolsPrompts
 class Workflow:
     def __init__(self):
         self.firecrawl = FirecrawlService()
-        self.llm = ChatOpenAI(model="gpt-5-mini", temperature=0.3)
+        self.llm = ChatOpenAI(model="gpt-5-mini", temperature=0.1)
         self.prompts = DeveloperToolsPrompts()
         self.workflow = self._build_workflow()
 
@@ -48,7 +48,7 @@ class Workflow:
             url = result.get("url", "")
             scraped = self.firecrawl.scrape_company_pages(url)
             if scraped:
-                all_content += scraped.markdown[:1000] + "\n\n"
+                all_content += scraped.markdown[:1500] + "\n\n"
 
         # Step 3: Use LLM to extract tool names from the content
         messages = [
@@ -134,7 +134,7 @@ class Workflow:
 
                 scraped = self.firecrawl.scrape_company_pages(url)
                 if scraped:
-                    content = scraped.markdown[:2500]  # Limit to first 2500 characters
+                    content = scraped.markdown
                     analysis = self._analyse_company_content(company.name, content)
 
                     # Update the company info with analysis results
@@ -148,14 +148,14 @@ class Workflow:
 
                 companies.append(company)
 
-        return {"comapnies": companies}
+        return {"companies": companies}
     
     # Perform structured analysis of each tool
     def _analyse_step(self, state: ResearchState) -> Dict[str, Any]:
         print("Generating recommendations")
 
         company_data = ", ".join([
-            company.model_dump_json() for company in state.companies 
+            company.json() for company in state.companies 
         ])
 
         messages = [
