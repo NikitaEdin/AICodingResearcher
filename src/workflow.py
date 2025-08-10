@@ -21,7 +21,7 @@ class Workflow:
 
     # Build the workflow graph
     def _build_workflow(self):
-        graph = StateGraph()
+        graph = StateGraph(ResearchState)
         graph.add_node("extract_tools", self._extract_tools_step)
         graph.add_node("research", self._research_step)
         graph.add_node("analyse", self._analyse_step)
@@ -44,7 +44,7 @@ class Workflow:
 
         # Step 2: Scrape content from the search results
         all_content = ""
-        for result in search_reslts:
+        for result in search_reslts.data:
             url = result.get("url", "")
             scraped = self.firecrawl.scrape_company_pages(url)
             if scraped:
@@ -66,7 +66,7 @@ class Workflow:
                 if name.strip()  # Filter out empty lines
             ]
             print(f"Extracted tools: {', '.join(tool_names[:5])}")
-            return ["extracted_tools", tool_names]
+            return {"extracted_tools": tool_names}
         except Exception as e:
             print(e)
             return {"extracted_tools": []}
@@ -90,7 +90,6 @@ class Workflow:
         except Exception as e:
             print(f"Error analysing {company_name}: {e}")
             return CompanyAnalysis(
-                company_name=company_name,
                 pricing_model="Unknown",
                 is_open_source=None,
                 tech_stack=[],
@@ -105,7 +104,7 @@ class Workflow:
         extracted_tools = getattr(state, "extracted_tools", [])
 
         if not extracted_tools:
-            print("No tools extracted, skipping analysis.")
+            print("No extracted tools found, skipping analysis.")
             search_results = self.firecrawl.search_companies(state.query, num_results=3)
 
             tool_names = [
@@ -128,7 +127,7 @@ class Workflow:
                 company = CompanyInfo(
                     name=tool_name,
                     description=result.get("markdown", ""),
-                    webiste=url,
+                    website=url,
                     tech_stack=[],
                     competitors=[]
                 )
@@ -160,7 +159,7 @@ class Workflow:
         ])
 
         messages = [
-            SystemMessage(content=self.prompts.TOOL_RECOMMENDATION_SYSTEM),
+            SystemMessage(content=self.prompts.RECOMMENDATIONS_SYSTEM),
             HumanMessage(content=self.prompts.recommendations_user(state.query, company_data))
         ]
 
