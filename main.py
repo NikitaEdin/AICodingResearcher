@@ -19,10 +19,10 @@ def main():
             print(f"\nResults for {query}")
             print("=" * 60)
 
-            for i, company in enumerate(result.companies, start=1):
+            for i, company in enumerate(result.companies, 1):
                 print(f"\n{i}. {company.name}")
                 print(f"   Website: {company.website}")
-                print(f"   Pricing: {company.pricing}")
+                print(f"   Pricing: {company.pricing_model}")
                 print(f"   Open Source: {company.is_open_source}")
 
                 if company.tech_stack:
@@ -32,7 +32,9 @@ def main():
                     print(f"   Language Support: {', '.join(company.language_support[:5])}")
 
                 if company.api_available is not None:
-                    api_status = "Available" if company.api_available else "Not Available"
+                    api_status = (
+                        "Available" if company.api_available else "Not Available"
+                    )
                     print(f"   API: {api_status}")
 
                 if company.integration_capabilities:
